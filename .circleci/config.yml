@@ -1,0 +1,26 @@
+node_version: &node_version 'lts'
+source_dir: &source_dir debuggable
+version: 2.1
+orbs:
+  gh: gebruederheitz/wordpress-deployment@1
+workflows:
+  version: 2
+  test-and-build:
+    jobs:
+      - gh/test:
+          name: test
+          context: slack-secrets
+          node_modules_path: node_modules
+          node_version: *node_version
+          package_lock_path: package-lock.json
+          source_dir: *source_dir
+      - gh/build_assets:
+          name: build
+          context: slack-secrets
+          requires:
+            - test
+          checkout: true
+          build_task_name: ci-build
+          node_version: *node_version
+          package_lock_path: package-lock.json
+          source_dir: *source_dir
