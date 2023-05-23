@@ -1,11 +1,10 @@
 .eslintignore
 .eslintrc
-.postcssrc
 .prettierrc
+.release-it.yaml
 .rollup.config.js
-.stylelintrc
 .yarnrc.yaml
-Gulpfile.esm.js
+Makefile
 
-demo/
-test/
+src/
+.circleci/

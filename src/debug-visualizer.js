@@ -50,7 +50,7 @@ export class DebugVisualizer {
                 }
             });
 
-            const entry = this._getEntryElement(level);
+            const entry = this._getEntryElement(level, string);
 
             if (this.element.childElementCount > 0) {
                 const insertionPoint = this.element.firstElementChild;
@@ -73,7 +73,7 @@ export class DebugVisualizer {
         return this.getPrint('error');
     }
 
-    _getEntryElement(level) {
+    _getEntryElement(level, content) {
         let borderColor = '#aaa';
         let textColor = '#222';
 
@@ -86,14 +86,14 @@ export class DebugVisualizer {
         }
 
         const entry = document.createElement('CODE');
-        entry.innerText = string;
+        entry.innerText = content;
         entry.classList.add('debug-visualize__entry');
         entry.classList.add(`debug-visualize__entry--${level}`);
         entry.style.display = 'block';
         entry.style.marginBottom = '1rem';
         entry.style.padding = '.25rem';
-        entry.style.paddingLeft = '.5rem'
-        entry.style.backgroundColor = '#ddd'
+        entry.style.paddingLeft = '.5rem';
+        entry.style.backgroundColor = '#ddd';
         entry.style.borderLeft = `10px solid ${borderColor}`;
         entry.style.color = textColor;
 

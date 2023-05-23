@@ -1,6 +1,5 @@
 import babel from '@rollup/plugin-babel';
-// import commonjs from '@rollup/plugin-commonjs';
-// import resolve from '@rollup/plugin-node-resolve';
+import resolve from '@rollup/plugin-node-resolve';
 
 function serve() {
     let server;
@@ -50,16 +49,15 @@ export default [
         external: [
             /@babel\/runtime/,
         ],
-        input: 'src/index.js',
+        input: 'src/debug.js',
         output: {
             file: 'dist/index.mjs',
             format: 'esm',
             sourcemap: true,
         },
         plugins: [
-            // resolve(),
+            resolve(),
             babel(babelConfig()),
-            // commonjs(),
         ],
     },
 ];
