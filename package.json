@@ -10,7 +10,7 @@
     "lint": "eslint src/",
     "release": "release-it --only-version",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "rollup -c ./.rollup.config.js -w",
+    "watch": "rollup -c ./.rollup.config.js -w"
   },
   "engines": {
     "node": "^18"
