@@ -3,7 +3,7 @@
 .prettierrc
 .release-it.yaml
 .rollup.config.js
-.yarnrc.yaml
+.yarnrc.yml
 Makefile
 .idea/
 .babelrc
@@ -11,3 +11,4 @@ Makefile
 
 src/
 .circleci/
+node_modules/
