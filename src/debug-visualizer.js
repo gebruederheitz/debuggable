@@ -16,6 +16,7 @@ export class DebugVisualizer {
         this.element = document.createElement('div');
         this.element.classList.add('console');
         this.element.style.width = '100%';
+        container.appendChild(this.element);
     }
 
     getPrint(level) {
