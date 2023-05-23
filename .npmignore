@@ -1,10 +1,13 @@
 .eslintignore
-.eslintrc
+.eslintrc.json
 .prettierrc
 .release-it.yaml
 .rollup.config.js
 .yarnrc.yaml
 Makefile
+.idea/
+.babelrc
+.nvmrc
 
 src/
 .circleci/
