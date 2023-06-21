@@ -3,8 +3,9 @@
   "version": "1.0.0-beta.3",
   "description": "Flexible debug output for browser applications.",
   "source": "src/index.ts",
-  "main": "dist/index.js",
   "module": "dist/index.mjs",
+  "browser": "dist/index.js",
+  "browserslist": ">0.2% and not dead, ie 11",
   "types": "dist/types.d.ts",
   "private": false,
   "scripts": {
@@ -41,5 +42,8 @@
     "prettier": "^2.3.2",
     "release-it": "^15.10.3",
     "typescript": "^5.1.3"
+  },
+  "dependencies": {
+    "@swc/helpers": "^0.5.1"
   }
 }
