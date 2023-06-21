@@ -57,14 +57,14 @@ class BasicDebugHelper implements DebugHelper {
         return this;
     }
 
-    public toggle(toggle: boolean): DebugHelper {
-        this._enabled = toggle;
+    public toggle(enabled: boolean): DebugHelper {
+        this._enabled = enabled;
 
         return this;
     }
 
-    public toggleVisualization(toggle: boolean): DebugHelper {
-        this._visualize = toggle;
+    public toggleVisualization(enabled: boolean): DebugHelper {
+        this._visualize = enabled;
 
         return this;
     }
