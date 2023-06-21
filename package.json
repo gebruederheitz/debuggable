@@ -1,6 +1,6 @@
 {
   "name": "@gebruederheitz/debuggable",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Flexible debug output for browser applications.",
   "source": "src/index.ts",
   "module": "dist/index.mjs",
