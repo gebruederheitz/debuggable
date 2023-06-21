@@ -1,9 +1,9 @@
 export class DebugVisualizer {
-    /** @type Element | null */
-    element = null;
+    element: HTMLDivElement = null;
 
     constructor() {
-        const container = document.querySelector('#debug-visualize');
+        const container: HTMLElement | null =
+            document.querySelector('#debug-visualize');
         if (!container) {
             return;
         }

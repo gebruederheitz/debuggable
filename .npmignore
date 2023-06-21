@@ -9,6 +9,7 @@ Makefile
 .babelrc
 .nvmrc
 
+.parcel-cache/
 src/
 .circleci/
 node_modules/

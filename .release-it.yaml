@@ -1,6 +1,8 @@
 git:
   commitMessage: "[chore] Release v${version}"
-  requireBranch: main
+  requireBranch:
+    - main
+    - next
 github:
   release: true
   web: true
