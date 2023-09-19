@@ -10,6 +10,7 @@ export interface DebugHelper {
     toggleVisualization(toggle: boolean): DebugHelper;
     timeout(ms: number): Promise<void>;
     devnull(...args: unknown[]): unknown[];
+    enabled: boolean;
 }
 
 export interface GlobalDebug extends DebugHelper {
@@ -43,6 +44,10 @@ class BasicDebugHelper implements DebugHelper {
         } else {
             this._parent = parent;
         }
+    }
+
+    public get enabled(): boolean {
+        return this._enabled;
     }
 
     public enable(): DebugHelper {
