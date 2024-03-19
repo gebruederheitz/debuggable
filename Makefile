@@ -1,19 +1,15 @@
 # Watch sources and host demo content on http://localhost:8080
 dev:
-	. $$NVM_DIR/nvm.sh && nvm use && \
-	npm i && npm run watch
+	asdf exec npm i && asdf exec npm run watch
 
 build:
-	. $$NVM_DIR/nvm.sh && nvm use && \
-	npm i && npm run build
+	asdf exec npm i && asdf exec npm run build
 
 lint:
-	. $$NVM_DIR/nvm.sh && nvm use && \
-	npm i && npm run lint
+	asdf exec npm i && asdf exec npm run lint
 
 release:
-	. $$NVM_DIR/nvm.sh && nvm use && \
-	npm run release
+	asdf exec npm run release
 
 #============================================================= CI TASKS ========
 
