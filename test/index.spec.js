@@ -97,4 +97,46 @@ describe('The debuggable library', () => {
 
         expect(consoleLog.firstArg).to.equal('');
     });
+
+    it('stacks prefixes', () => {
+        debug.enable();
+        const child = debug.spawn('child');
+        const grandchild = child.spawn('grandchild')
+
+        grandchild.log('Stacked prefixes');
+
+        expect(consoleLog.firstArg).to.equal('[child]');
+        expect(consoleLog.args[0]).to.include.ordered.members(['[child]', '[grandchild]']);
+    });
+
+    it('allows recursion', () => {
+        debug.enable();
+
+        const child = debug.spawn('child');
+        const grandchild = child.spawn('grandchild');
+        const greatGrandchild = grandchild.spawn('greatgrandchild');
+
+        // These three should all be displayed
+        child.log('hi daddy');
+        grandchild.log('hi granddad');
+        greatGrandchild.log('hi great-granddaddy');
+
+        child.disable();
+
+        // These three should not
+        child.log('hi again daddy');
+        grandchild.log('hi again granddad');
+        greatGrandchild.log('hi again great-granddaddy');
+
+        child.enable();
+        grandchild.disable();
+
+        // This one is now back in the game...
+        child.log('hi again daddy');
+        // ...while the next two aren't.
+        grandchild.log('hi again granddad');
+        greatGrandchild.log('hi again great-granddaddy');
+
+        expect(consoleLog.callCount).to.equal(4);
+    })
 });

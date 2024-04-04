@@ -1,3 +1,4 @@
+import mitt from 'mitt';
 import { DebugVisualizer } from './debug-visualizer';
 
 export interface DebugHelper {
@@ -11,18 +12,21 @@ export interface DebugHelper {
     timeout(ms: number): Promise<void>;
     devnull(...args: unknown[]): unknown[];
     enabled: boolean;
-}
-
-export interface GlobalDebug extends DebugHelper {
     spawn(namespace?: string | Object | null): DebugHelper;
 }
 
+export interface GlobalDebug extends DebugHelper {}
+
 class BasicDebugHelper implements DebugHelper {
-    protected _enabled = false;
+    protected _explicitlyEnabled = true;
+    protected _inheritedEnabled = true;
     protected _namespace: string | null = null;
-    protected _parent: BasicDebugHelper = this;
     protected _visualize: boolean = false;
     protected _visualizer: DebugVisualizer = new DebugVisualizer();
+
+    private _parent: BasicDebugHelper | null = null;
+
+    private _eventInterface = mitt();
 
     constructor(
         namespace: string | Object | null = null,
@@ -37,33 +41,48 @@ class BasicDebugHelper implements DebugHelper {
             }
         }
 
-        this._enabled = enabled;
+        this._explicitlyEnabled = enabled;
 
-        if (parent === null) {
-            this._parent = this;
-        } else {
+        if (parent) {
+            this._inheritedEnabled = parent._inheritedEnabled;
             this._parent = parent;
+
+            parent.on('toggle', (enabled: boolean) => {
+                this._inheritedEnabled = enabled;
+                this._eventInterface.emit('toggle', enabled);
+            });
         }
     }
 
+    public get on() {
+        return this._eventInterface.on;
+    }
+
+    public spawn(namespace: string | Object | null = null, enabled: boolean = true): BasicDebugHelper {
+        return new BasicDebugHelper(namespace, enabled, this);
+    }
+
     public get enabled(): boolean {
-        return this._enabled;
+        return this._explicitlyEnabled && this._inheritedEnabled;
     }
 
     public enable(): DebugHelper {
-        this._enabled = true;
+        this._explicitlyEnabled = true;
+        this._eventInterface.emit('toggle', true);
 
         return this;
     }
 
     public disable(): DebugHelper {
-        this._enabled = false;
+        this._explicitlyEnabled = false;
+        this._eventInterface.emit('toggle', false);
 
         return this;
     }
 
     public toggle(enabled: boolean): DebugHelper {
-        this._enabled = enabled;
+        this._explicitlyEnabled = enabled;
+        this._eventInterface.emit('toggle', enabled);
 
         return this;
     }
@@ -75,15 +94,15 @@ class BasicDebugHelper implements DebugHelper {
     }
 
     public log(...args: unknown[]): void {
-        if (this._enabled) this._parent.log(this._prefix, ...args);
+        if (this.enabled) this._parent.log(this._prefix, ...args);
     }
 
     public warn(...args: unknown[]): void {
-        if (this._enabled) this._parent.warn(this._prefix, ...args);
+        if (this.enabled) this._parent.warn(this._prefix, ...args);
     }
 
     public error(...args: unknown[]): void {
-        if (this._enabled) this._parent.error(this._prefix, ...args);
+        if (this.enabled) this._parent.error(this._prefix, ...args);
     }
 
     public devnull(...args: unknown[]): unknown[] {
@@ -101,13 +120,9 @@ class BasicDebugHelper implements DebugHelper {
     }
 }
 
-class GlobalDebugHelper extends BasicDebugHelper implements GlobalDebug {
-    public spawn(namespace: string | Object | null = null): BasicDebugHelper {
-        return new BasicDebugHelper(namespace, this._enabled, this);
-    }
-
+class GlobalDebugHelper extends BasicDebugHelper {
     override log(...args: unknown[]): void {
-        if (this._enabled) {
+        if (this._explicitlyEnabled) {
             console.log(...args);
             if (this._visualize) {
                 this._visualizer.log(...args);
@@ -116,7 +131,7 @@ class GlobalDebugHelper extends BasicDebugHelper implements GlobalDebug {
     }
 
     override warn(...args: unknown[]): void {
-        if (this._enabled) {
+        if (this._explicitlyEnabled) {
             console.warn(...args);
             if (this._visualize) {
                 this._visualizer.warn(...args);
@@ -125,7 +140,7 @@ class GlobalDebugHelper extends BasicDebugHelper implements GlobalDebug {
     }
 
     override error(...args: unknown[]): void {
-        if (this._enabled) {
+        if (this._explicitlyEnabled) {
             console.error(...args);
             if (this._visualize) {
                 this._visualizer.error(...args);
@@ -134,4 +149,4 @@ class GlobalDebugHelper extends BasicDebugHelper implements GlobalDebug {
     }
 }
 
-export const debug: GlobalDebug = new GlobalDebugHelper('Global', false);
+export const debug: GlobalDebug = new GlobalDebugHelper('Global', false, null);
