@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 
 import { debug } from '../dist/index.mjs';
+import { FixtureDummyClass } from './fixture-class.js';
 
 describe('The debuggable library', () => {
     const sandbox = sinon.createSandbox();
@@ -76,5 +77,24 @@ describe('The debuggable library', () => {
         child.log('Prefixed');
 
         expect(consoleLog.firstArg).to.equal('[child]');
+    });
+
+    it('can use a class name as a prefix when passed an object', () => {
+        debug.enable();
+        const object = new FixtureDummyClass();
+        const child = debug.spawn(object);
+
+        child.log('Prefixed');
+
+        expect(consoleLog.firstArg).to.equal('[FixtureDummyClass]');
+    });
+
+    it('can skip prefixing', () => {
+        debug.enable();
+        const child = debug.spawn();
+
+        child.log('Not Prefixed');
+
+        expect(consoleLog.firstArg).to.equal('');
     });
 });
