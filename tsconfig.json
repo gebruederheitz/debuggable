@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-    "isolatedModules": true,
     "target": "ES2020",
-
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "isolatedModules": true,
     /* Linting */
 //    "strict": true,
     "noUnusedLocals": true,

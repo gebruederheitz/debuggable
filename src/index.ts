@@ -134,4 +134,4 @@ class GlobalDebugHelper extends BasicDebugHelper implements GlobalDebug {
     }
 }
 
-export const debug: GlobalDebug = new GlobalDebugHelper('Global');
+export const debug: GlobalDebug = new GlobalDebugHelper('Global', false);

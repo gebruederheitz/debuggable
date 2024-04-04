@@ -2,8 +2,10 @@ export class DebugVisualizer {
     element: HTMLDivElement = null;
 
     constructor() {
+        if (!globalThis?.document) return;
+
         const container: HTMLElement | null =
-            document.querySelector('#debug-visualize');
+            document?.querySelector('#debug-visualize') || null;
         if (!container) {
             return;
         }
@@ -13,10 +15,12 @@ export class DebugVisualizer {
         container.style.overflowY = 'auto';
         container.style.fontSize = '1.5em';
 
-        this.element = document.createElement('div');
-        this.element.classList.add('console');
-        this.element.style.width = '100%';
-        container.appendChild(this.element);
+        this.element = document?.createElement('div') || null;
+        this.element?.classList.add('console');
+        if (this.element) {
+            this.element.style.width = '100%';
+            container.appendChild(this.element);
+        }
     }
 
     getPrint(level) {
@@ -53,11 +57,13 @@ export class DebugVisualizer {
 
             const entry = this._getEntryElement(level, string);
 
-            if (this.element.childElementCount > 0) {
-                const insertionPoint = this.element.firstElementChild;
-                this.element.insertBefore(entry, insertionPoint);
-            } else {
-                this.element.appendChild(entry);
+            if (this.element && entry) {
+                if (this.element.childElementCount > 0) {
+                    const insertionPoint = this.element.firstElementChild;
+                    this.element.insertBefore(entry, insertionPoint);
+                } else {
+                    this.element.appendChild(entry);
+                }
             }
         };
     }
@@ -74,7 +80,7 @@ export class DebugVisualizer {
         return this.getPrint('error');
     }
 
-    _getEntryElement(level, content) {
+    _getEntryElement(level: string, content: string): HTMLElement | null {
         let borderColor = '#aaa';
         let textColor = '#222';
 
@@ -86,18 +92,22 @@ export class DebugVisualizer {
             borderColor = '#800';
         }
 
-        const entry = document.createElement('CODE');
-        entry.innerText = content;
-        entry.classList.add('debug-visualize__entry');
-        entry.classList.add(`debug-visualize__entry--${level}`);
-        entry.style.display = 'block';
-        entry.style.marginBottom = '1rem';
-        entry.style.padding = '.25rem';
-        entry.style.paddingLeft = '.5rem';
-        entry.style.backgroundColor = '#ddd';
-        entry.style.borderLeft = `10px solid ${borderColor}`;
-        entry.style.color = textColor;
+        const entry = document?.createElement('CODE') || null;
+        if (entry) {
+            entry.innerText = content;
+            entry.classList.add('debug-visualize__entry');
+            entry.classList.add(`debug-visualize__entry--${level}`);
+            entry.style.display = 'block';
+            entry.style.marginBottom = '1rem';
+            entry.style.padding = '.25rem';
+            entry.style.paddingLeft = '.5rem';
+            entry.style.backgroundColor = '#ddd';
+            entry.style.borderLeft = `10px solid ${borderColor}`;
+            entry.style.color = textColor;
 
-        return entry;
+            return entry;
+        }
+
+        return null;
     }
 }
