@@ -58,7 +58,10 @@ class BasicDebugHelper implements DebugHelper {
         return this._eventInterface.on;
     }
 
-    public spawn(namespace: string | Object | null = null, enabled: boolean = true): BasicDebugHelper {
+    public spawn(
+        namespace: string | Object | null = null,
+        enabled: boolean = true
+    ): BasicDebugHelper {
         return new BasicDebugHelper(namespace, enabled, this);
     }
 
