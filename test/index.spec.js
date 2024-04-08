@@ -9,7 +9,7 @@ describe('The debuggable library', () => {
     let consoleLog;
 
     beforeEach(() => {
-        consoleLog = sandbox.replace(global.console, 'log', sinon.fake(global.console.log));
+        consoleLog = sandbox.replace(global.console, 'log', sinon.fake());
     });
 
     afterEach(function () {
