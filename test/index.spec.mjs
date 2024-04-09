@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 
 import { debug } from '../dist/index.mjs';
-import { FixtureDummyClass } from './fixture-class.js';
+import { FixtureDummyClass } from './fixture-class.mjs';
 
 describe('The debuggable library', () => {
     const sandbox = sinon.createSandbox();
