@@ -7,7 +7,6 @@
   "main": "dist/index.js",
   "browserslist": ">0.2% and not dead, ie 11",
   "types": "dist/types.d.ts",
-  "type": "module",
   "private": false,
   "scripts": {
     "build": "parcel build",
