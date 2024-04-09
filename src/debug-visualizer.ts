@@ -1,11 +1,13 @@
 export class DebugVisualizer {
-    element: HTMLDivElement = null;
+    public element: HTMLDivElement | null = null;
+    protected document: Document | null = null;
 
     constructor() {
         if (!globalThis?.document) return;
+        this.document = globalThis.document;
 
         const container: HTMLElement | null =
-            document?.querySelector('#debug-visualize') || null;
+            this.document?.querySelector('#debug-visualize') || null;
         if (!container) {
             return;
         }
@@ -15,7 +17,7 @@ export class DebugVisualizer {
         container.style.overflowY = 'auto';
         container.style.fontSize = '1.5em';
 
-        this.element = document?.createElement('div') || null;
+        this.element = this.document?.createElement('div') || null;
         this.element?.classList.add('console');
         if (this.element) {
             this.element.style.width = '100%';
@@ -92,7 +94,7 @@ export class DebugVisualizer {
             borderColor = '#800';
         }
 
-        const entry = document?.createElement('CODE') || null;
+        const entry = this.document?.createElement('CODE') || null;
         if (entry) {
             entry.innerText = content;
             entry.classList.add('debug-visualize__entry');
