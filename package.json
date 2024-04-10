@@ -14,7 +14,7 @@
     "lint:tsc": "tsc --noEmit",
     "lint:prettier": "prettier -c src/",
     "release": "release-it --only-version",
-    "test": "mocha",
+    "test": "tsc test/fixtures.ts && mocha test/**/*.spec.mjs",
     "watch": "parcel watch"
   },
   "repository": {
@@ -39,6 +39,7 @@
     "@parcel/packager-ts": "^2.9.2",
     "@parcel/transformer-typescript-types": "^2.9.2",
     "@types/node": "^20.12.4",
+    "@types/uuid": "^9.0.8",
     "chai": "^5.1.0",
     "mocha": "^10.4.0",
     "parcel": "^2.9.2",
@@ -49,6 +50,8 @@
   },
   "dependencies": {
     "@swc/helpers": "^0.5.1",
-    "mitt": "^3.0.1"
+    "mitt": "^3.0.1",
+    "tsx": "^4.7.2",
+    "uuid": "^9.0.1"
   }
 }

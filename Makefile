@@ -1,6 +1,6 @@
 # Watch sources and host demo content on http://localhost:8080
 dev:
-	asdf exec npm
+	asdf exec npm i
 	asdf exec npm run watch
 
 build:
