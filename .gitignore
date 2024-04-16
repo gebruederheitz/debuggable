@@ -6,4 +6,4 @@ yarn-error.log
 .parcel-cache/
 
 dist/
-test/fixtures.js
+test/fixtures/build/
