@@ -1,6 +1,6 @@
 # Debuggable
 
-_Flexible debug output for browser applications._
+_Flexible debug output control for browser oder NodeJS applications._
 
 ---
 
@@ -13,7 +13,7 @@ _Flexible debug output for browser applications._
 ## Usage
 
 The library exports a singleton object, which can be used directly, or to spawn
-further child debuggers. While it's enabled (which is the default state) it will 
+further child debuggers. While it's enabled (~~which is the default state~~) it will 
 simply proxy its arguments through to `console`. Currently implemented are the 
 methods `log()`, `warn()` and `error()`.
 
@@ -34,11 +34,11 @@ They also allow filtering the console for messages from a particular component
 quite simply.
 
 ```js
-const childLogger = debug.spawn('child');
+const childLogger = debug.spawn('childID', 'ChildNamespace');
 childLogger.log('happy');
 
 /*
--->> [child] happy
+-->> [ChildNamespace] happy
 
  */
 ```
@@ -60,6 +60,23 @@ child.log('something') // doesn't log anything, because globally disabled
 
 debug.enable();
 child.log('something') // logs something
+```
+
+Instances can recursively spawn children of their own:
+
+```js
+const child = debug.spawn('child', 'Child');
+const grandChild = child.spawn('grandchild', 'Grandchild');
+const greatGrandChild = grandChild.spawn('greatgrandchild', 'Great-Grandchild');
+
+greatGrandChild.log('Hi Grandpa!');
+
+/*
+-->> [Child] [Grandchild] [Great-Grandchild] Hi Grandpa!
+ */
+
+grancChild.disable();
+greatGrandChild.log('**crickets**'); // no output, because disabled state is inherited
 ```
 
 
@@ -115,7 +132,115 @@ Resulting output:
 ```
 
 
-### On-Page Console
+### IDs, Namespaces & Tagging
+
+```ts
+interface DebugHelper {
+    spawn(
+        id?: string,  // A unique identifier. Pass null to have 
+                      // a UUIDv4 generated for you.
+        namespace?: string, // The prefix for this instance, which will
+                            // be prepended [in square brackets] along
+                            // the prefixes of all ancestors.
+        startsEnabled?: boolean, // Default true, pass false to initially
+                                 // silence this instance.
+        ...tags: string[]  // A list of tags to be associated with this
+                           // instance. Can be used with configure()
+                           // as shown below.
+    ): DebugHelper;
+    // ...
+}
+```
+
+Another way to add tags is using the dedicated, chainable method:
+
+```js
+const child = debug.spawn('some-id').addTags('firstTag', 'secondTag');
+```
+
+
+### Runtime Configuration
+
+You can toggle instances by their ID or assigned tags using the `configure()`
+function on the global instance.
+
+```js
+debug.configure({
+  tag: false,       // Will be disabled
+  othertag: true,   // Will be enabled
+  childId: true,
+});
+```
+
+
+### Typescript Class Decorator
+
+If you're using Typescript, you can use the decorator to automagically inject
+a child instance as a class property. It will automatically inherit from the
+debug instance on the parent class if it exists.
+
+```ts
+import { debug, DecoratedWithDebug } from '@gebruederheitz/debuggable';
+
+// A little hack to communicate the additional property to Typescript
+export interface MyDecoratedClass extends DecoratedWithDebug {}
+
+@debug.decorate('id', 'tag', 'more-tags', '...')
+class MyDecoratedClass {
+    squawk() {
+        this.debug.log('Quack!');
+    }
+}
+
+new MyDecoratedClass().squawk();
+
+// Automatic inheritance
+@debug.decorate('child')
+class MyChildClass extends MyDecoratedClass {}
+
+const child = new MyChildClass();
+child.squawk();
+
+// -->> [id] [child] Quack!
+
+MyDecoratedClass.prototype.debug.disable();
+child.squawk();
+// > silence
+```
+
+
+### Event Interface
+
+The event interface is an instance of [mitt](https://npmjs.com/mitt) that is
+exposed as a public property on the global instance.
+
+```ts
+import type { Events } from 'gebruederheitz/debuggable';
+import type { Emitter } from 'mitt';
+
+import { debug } from 'gebruederheitz/debuggable';
+
+const eventInterface: Emitter<Events> = debug.events;
+
+// Listen to events
+eventInterface.on('register', ({instance, parent}: Events['register']) => {
+    console.log('New instance has been spawned.', {
+        newInstance: instance,
+        parentInstance: parent,
+    });
+});
+
+// Trigger events manually
+eventInterface.emit('message', {
+    type: 'log',
+    instance: someDebugHelperInstance,
+    message: ['Hello'],
+});
+eventInterface.emit('toggle_some-id', { enabled: false });
+```
+
+
+### On-Page Console (browser only)
 
 This feature is particularly useful for debugging web applications on mobile
 devices, particularly ones you might not have direct access to – i.e. whenever
@@ -123,7 +248,7 @@ using remote or USB debugging is impractical or impossible. Somewhere on the
 page running your scripts you'll insert an empty `div` element with the ID
 attribute `debug-visualize`, and enable "visualisation" on the debug object.
 
-Now the debugger will replicate any console output into this "fake console"
+Now the debugger will replicate any debug output into this "fake console"
 element, allowing you to read your app's debug messages without access to the
 browser console. Obviously this is not suitable for production use.
 
@@ -187,15 +312,16 @@ class MyClass {
 
 ```
 
-## Development
 
+## Development
 
 ### Dependencies
 
 - nodeJS LTS (18.x)
 - nice to have:
     - GNU make or drop-in alternative
-    - NVM
+    - NVM or [asdf](https://asdf-vm.com/guide/getting-started.html)
+
 
 ### Quickstart
 
@@ -216,8 +342,8 @@ $> npm run build
 $> make build
 ```
 to create the ES-module build at `dist/index.mjs` and make 
-certain everything runs smoothly. You should also run `make lint` at least once
-to avoid simple linting issues.
+certain everything runs smoothly. You should also run `make test` at least once
+to avoid simple linting issues and run the test suite.
 
 When you're finished, you can use `make release` on the main branch to publish
 your changes.

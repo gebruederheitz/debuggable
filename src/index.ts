@@ -1,91 +1,38 @@
 import type { Emitter } from 'mitt';
-import { v4 as uuid } from 'uuid';
 import mitt from 'mitt';
+import type {
+    ClassDecorator,
+    Constructor,
+    DebugHelper,
+    Events,
+    GlobalDebug,
+    LogEvent,
+    NamespaceParameter,
+    RegistrationEvent,
+    ToggleEvent,
+} from './interfaces';
+
+import { v4 as uuid } from 'uuid';
+import SymbolTree from 'symbol-tree';
 import { DebugVisualizer } from './debug-visualizer';
-
-interface ToggleEvent {
-    origin: string[];
-    enabled: boolean;
-}
-
-interface LogEvent {
-    type: 'log' | 'warn' | 'error';
-    prefix: string[];
-    origin: string[];
-    message: any[];
-}
-
-interface RegistrationEvent {
-    origin: string[];
-    enabled: boolean;
-}
-
-interface Events extends Record<string | symbol, unknown> {
-    toggle: ToggleEvent;
-    message: LogEvent;
-    register: RegistrationEvent;
-}
-
-type NamespaceParameter = string | Object | true | null;
-
-export interface DebugHelper {
-    log(...args: unknown[]): void;
-    warn(...args: unknown[]): void;
-    error(...args: unknown[]): void;
-    enable(): DebugHelper;
-    disable(): DebugHelper;
-    toggle(toggle: boolean): DebugHelper;
-    toggleVisualization(toggle: boolean): DebugHelper;
-    timeout(ms: number): Promise<void>;
-    devnull(...args: unknown[]): unknown[];
-    spawn(
-        id?: string | Object | null,
-        namespace?: NamespaceParameter
-    ): DebugHelper;
-}
-
-type Constructor = new (...args: any[]) => any;
-type ClassDecorator<T extends Constructor> = (
-    constructor: T,
-    context: ClassDecoratorContext
-) => T;
-
-export interface GlobalDebug extends DebugHelper {
-    decorate<T extends Constructor>(prefix: string | null): ClassDecorator<T>;
-}
-
-export interface DecoratedWithDebug {
-    debug: DebugHelper;
-}
 
 const eventProxy: Emitter<Events> = mitt();
 
 class BasicDebugHelper implements DebugHelper {
-    protected _visualize: boolean = false;
-    protected _visualizer: DebugVisualizer = new DebugVisualizer();
-    protected tags: string[] = [];
-
     constructor(
         protected id: string,
-        protected _parents: string[],
         protected _namespace: string[] = [],
-        protected startsEnabled: boolean = true
+        public enabled: boolean = true,
+        protected tags: string[] = []
     ) {
-        this.tags = [id, ..._parents];
-        this.register(startsEnabled);
-    }
-
-    protected register(startsEnabled: boolean) {
-        eventProxy.emit('register', {
-            origin: this.origin,
-            enabled: startsEnabled,
-        });
+        this.listen();
     }
 
     public spawn(
         id: string | Object | null = null,
         namespace: NamespaceParameter = null,
-        startsEnabled: boolean = true
+        startsEnabled: boolean = true,
+        ...tags: string[]
     ): DebugHelper {
         let childId: string;
 
@@ -113,12 +60,26 @@ class BasicDebugHelper implements DebugHelper {
             childNamespace.push(parsedNamespace);
         }
 
-        return new BasicDebugHelper(
+        const child = new BasicDebugHelper(
             childId,
-            this.origin,
             childNamespace,
-            startsEnabled
+            startsEnabled,
+            tags
         );
+
+        eventProxy.emit('register', {
+            instance: child,
+            parent: this,
+        });
+
+        return child;
+    }
+
+    public addTags(...tags: string[]): this {
+        this.tags.push(...tags);
+        this.listenForTags(tags);
+
+        return this;
     }
 
     public enable(): DebugHelper {
@@ -134,20 +95,7 @@ class BasicDebugHelper implements DebugHelper {
     }
 
     public toggle(enabled: boolean): DebugHelper {
-        eventProxy.emit('toggle', {
-            origin: this.origin,
-            enabled,
-        });
-
-        return this;
-    }
-
-    protected get origin(): string[] {
-        return [...this._parents, this.id];
-    }
-
-    public toggleVisualization(enabled: boolean): DebugHelper {
-        this._visualize = enabled;
+        this.enabled = enabled;
 
         return this;
     }
@@ -155,8 +103,7 @@ class BasicDebugHelper implements DebugHelper {
     protected message(type: LogEvent['type'], message: unknown[]): void {
         eventProxy.emit('message', {
             type,
-            prefix: this._namespace,
-            origin: [...this._parents, this.id],
+            instance: this,
             message,
         });
     }
@@ -182,43 +129,47 @@ class BasicDebugHelper implements DebugHelper {
             setTimeout(() => res(), ms);
         });
     }
+
+    public getPrefix(): string[] {
+        return this._namespace;
+    }
+
+    protected listen(): void {
+        eventProxy.on(`toggle_${this.id}`, this.onToggle);
+        this.listenForTags(this.tags);
+    }
+
+    protected listenForTags(tags: string[]): void {
+        tags.forEach((tag) => {
+            eventProxy.on(`toggle_${tag}`, this.onToggle);
+        });
+    }
+
+    protected onToggle = ({ enabled }: ToggleEvent) => {
+        this.enabled = enabled;
+    };
 }
 
 class GlobalDebugHelper extends BasicDebugHelper {
+    protected _visualize: boolean = false;
+    protected _visualizer: DebugVisualizer = new DebugVisualizer();
     private globallyEnabled: boolean = false;
-    // private config: Record<string, boolean> = {};
-    private configMap: Map<string, boolean> = new Map();
+    private tree: SymbolTree = new SymbolTree();
 
     constructor() {
         super('Global', []);
         eventProxy.on('message', this.onMessage);
         eventProxy.on('register', this.onRegister);
-        eventProxy.on('toggle', this.onToggle);
     }
 
-    protected override register() {}
+    public get events() {
+        return eventProxy;
+    }
 
-    private onRegister = ({ origin, enabled }: RegistrationEvent): void => {
-        this.configMap.set(JSON.stringify(origin), enabled);
-    };
+    public toggleVisualization(enabled: boolean): DebugHelper {
+        this._visualize = enabled;
 
-    private onMessage = ({ type, message, prefix, origin }: LogEvent): void => {
-        if (!this.globallyEnabled) return;
-
-        if (!this.checkOriginEnabled(origin)) {
-            return;
-        }
-
-        this[type](...this.prefix(...prefix), ...message);
-    };
-
-    private onToggle = ({ origin, enabled }: ToggleEvent): void => {
-        this.configMap.set(JSON.stringify(origin), enabled);
-    };
-
-    private checkOriginEnabled(origin: string[]): boolean {
-        const key = JSON.stringify(origin);
-        return this.configMap.has(key) && this.configMap.get(key);
+        return this;
     }
 
     override log(...args: unknown[]): void {
@@ -254,33 +205,68 @@ class GlobalDebugHelper extends BasicDebugHelper {
         return this;
     }
 
-    // public setConfig(config: Record<string, boolean>): void {
-    //     Object.keys(config).forEach((instanceId) => {
-    //         // const enabled = config[instanceId];
-    //         // this._eventInterface.emit(`toggle-${instanceId}`, enabled);
-    //     });
-    // }
+    public configure(config: Record<string, boolean>): this {
+        Object.keys(config).forEach((instanceIdOrTag) => {
+            const shouldBeEnabled = config[instanceIdOrTag];
+            eventProxy.emit(`toggle_${instanceIdOrTag}`, {
+                enabled: shouldBeEnabled,
+            });
+        });
 
-    // protected get _prefix(): string {
-    //     return this._namespace !== null ? `[${this._namespace}]` : '';
-    // }
-
-    protected prefix(...strings: string[]): string[] {
-        return strings.map((s) => `[${s.trim()}]`);
+        return this;
     }
 
     public decorate<T extends Constructor>(
-        prefix: string | null = null
+        prefix: string | null = null,
+        ...tags: string[]
     ): ClassDecorator<T> {
         return function withDebugDecorator(
             constructor: T,
             context: ClassDecoratorContext
         ): T {
-            constructor.prototype.debug = debug.spawn(context.name, prefix);
+            const base = constructor.prototype?.debug || debug;
+
+            constructor.prototype.debug = base
+                .spawn(context.name, prefix)
+                .addTags(...tags);
 
             return constructor;
         };
     }
+
+    protected override listen(): void {}
+
+    protected prefix(...strings: string[]): string[] {
+        return strings.map((s) => `[${s.trim()}]`);
+    }
+
+    private onRegister = ({ instance, parent }: RegistrationEvent): void => {
+        this.tree.appendChild(parent, instance);
+    };
+
+    private onMessage = ({ type, message, instance }: LogEvent): void => {
+        if (!this.globallyEnabled) return;
+
+        if (!this.checkOriginEnabled(instance)) {
+            return;
+        }
+
+        this[type](...this.prefix(...instance.getPrefix()), ...message);
+    };
+
+    private checkOriginEnabled(instance: DebugHelper): boolean {
+        return (
+            instance.enabled &&
+            this.tree
+                .ancestorsToArray(instance)
+                .every((parent: DebugHelper) => parent.enabled)
+        );
+    }
 }
 
 export const debug: GlobalDebug = new GlobalDebugHelper();
+export type {
+    DecoratedWithDebug,
+    DebugHelper,
+    GlobalDebug,
+} from './interfaces';
