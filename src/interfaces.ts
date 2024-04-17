@@ -27,7 +27,7 @@ export interface DebugHelper {
 export type Constructor = new (...args: any[]) => any;
 export type ClassDecorator<T extends Constructor> = (
     constructor: T,
-    context: ClassDecoratorContext
+    context?: ClassDecoratorContext
 ) => T;
 
 export interface GlobalDebug extends DebugHelper {
