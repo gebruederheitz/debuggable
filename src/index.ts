@@ -1,5 +1,4 @@
 import type { Emitter } from 'mitt';
-import mitt from 'mitt';
 import type {
     ClassDecorator,
     Constructor,
@@ -12,6 +11,7 @@ import type {
     ToggleEvent,
 } from './interfaces';
 
+import mitt from 'mitt';
 import { v4 as uuid } from 'uuid';
 import SymbolTree from 'symbol-tree';
 import { DebugVisualizer } from './debug-visualizer';

@@ -8,8 +8,10 @@ Makefile
 .idea/
 .babelrc
 .nvmrc
+.tool-versions
 
 .parcel-cache/
 src/
 .circleci/
 node_modules/
+test/
