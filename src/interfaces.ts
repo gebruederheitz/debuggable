@@ -9,9 +9,9 @@ export interface DebugHelper {
     log(...args: unknown[]): void;
     warn(...args: unknown[]): void;
     error(...args: unknown[]): void;
-    enable(): DebugHelper;
-    disable(): DebugHelper;
-    toggle(toggle: boolean): DebugHelper;
+    enable(): this;
+    disable(): this;
+    toggle(toggle: boolean): this;
     timeout(ms: number): Promise<void>;
     devnull(...args: unknown[]): unknown[];
     spawn(
@@ -20,7 +20,7 @@ export interface DebugHelper {
         startsEnabled?: boolean,
         ...tags: string[]
     ): DebugHelper;
-    addTags(...tags: string[]): DebugHelper;
+    addTags(...tags: string[]): this;
     getPrefix(): string[];
 }
 
@@ -33,10 +33,11 @@ export type ClassDecorator<T extends Constructor> = (
 export interface GlobalDebug extends DebugHelper {
     events: Emitter<Events>;
     decorate<T extends Constructor>(
-        prefix: string | null,
+        prefix: NamespaceParameter,
         ...tags: string[]
     ): ClassDecorator<T>;
-    toggleVisualization(toggle: boolean): DebugHelper;
+    toggleVisualization(toggle: boolean): this;
+    configure(config: Record<string, boolean>): this;
 }
 
 export interface DecoratedWithDebug {

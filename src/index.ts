@@ -82,19 +82,19 @@ class BasicDebugHelper implements DebugHelper {
         return this;
     }
 
-    public enable(): DebugHelper {
+    public enable(): this {
         this.toggle(true);
 
         return this;
     }
 
-    public disable(): DebugHelper {
+    public disable(): this {
         this.toggle(false);
 
         return this;
     }
 
-    public toggle(enabled: boolean): DebugHelper {
+    public toggle(enabled: boolean): this {
         this.enabled = enabled;
 
         return this;
@@ -150,7 +150,10 @@ class BasicDebugHelper implements DebugHelper {
     };
 }
 
-class GlobalDebugHelper extends BasicDebugHelper {
+class GlobalDebugHelper
+    extends BasicDebugHelper
+    implements GlobalDebug, DebugHelper
+{
     protected _visualize: boolean = false;
     protected _visualizer: DebugVisualizer = new DebugVisualizer();
     private globallyEnabled: boolean = false;
@@ -166,7 +169,7 @@ class GlobalDebugHelper extends BasicDebugHelper {
         return eventProxy;
     }
 
-    public toggleVisualization(enabled: boolean): DebugHelper {
+    public toggleVisualization(enabled: boolean): this {
         this._visualize = enabled;
 
         return this;
@@ -217,14 +220,14 @@ class GlobalDebugHelper extends BasicDebugHelper {
     }
 
     public decorate<T extends Constructor>(
-        prefix: string | null = null,
+        prefix: NamespaceParameter = null,
         ...tags: string[]
     ): ClassDecorator<T> {
         return function withDebugDecorator(
             constructor: T,
-            context: ClassDecoratorContext
+            context: ClassDecoratorContext = null
         ): T {
-            const base = constructor.prototype?.debug || debug;
+            const base: DebugHelper = constructor.prototype?.debug || debug;
             const name = context?.name || constructor.name || null;
 
             constructor.prototype.debug = base
