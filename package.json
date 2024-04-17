@@ -1,6 +1,6 @@
 {
   "name": "@gebruederheitz/debuggable",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Flexible debug output for browser applications.",
   "source": "src/index.ts",
   "module": "dist/index.mjs",
