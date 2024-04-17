@@ -225,9 +225,10 @@ class GlobalDebugHelper extends BasicDebugHelper {
             context: ClassDecoratorContext
         ): T {
             const base = constructor.prototype?.debug || debug;
+            const name = context?.name || constructor.name || null;
 
             constructor.prototype.debug = base
-                .spawn(context.name, prefix)
+                .spawn(name, prefix)
                 .addTags(...tags);
 
             return constructor;
