@@ -26,7 +26,20 @@ tasks:
   test:dev:
     desc: "Run the test suite in isolation (no pre-linting)."
     deps: [install]
-    cmd: asdf exec npm run test
+    interactive: true
+    cmds:
+      - task: test:dev:run
+
+  test:dev:run:
+    internal: true
+    interactive: true
+    deps:
+      - dev
+      - test:watch
+
+  test:watch:
+    internal: true
+    cmd: asdf exec npm run test:dev
 
   release:
     desc: "Create a tagged release and publish the package."

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
+import { describe, it, beforeEach, afterEach } from 'vitest';
 import { Browser } from 'happy-dom';
 import { expect } from 'chai';
 import sinon from 'sinon';
