@@ -37,7 +37,10 @@ export interface GlobalDebug extends DebugHelper {
         ...tags: string[]
     ): ClassDecorator<Constructor<T>>;
     toggleVisualization(toggle: boolean): this;
-    configure(config: Record<string, boolean>): this;
+    configure(
+        config: Record<string, boolean> | null,
+        options?: GlobalOptions | null
+    ): this;
 }
 
 export interface DecoratedWithDebug {
