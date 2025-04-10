@@ -1,9 +1,13 @@
+type LevelString = 'log' | 'warn' | 'error';
+
 export class DebugVisualizer {
     public element: HTMLDivElement | null = null;
     protected document: Document | null = null;
 
     constructor() {
-        if (!globalThis?.document) return;
+        if (!globalThis?.document) {
+            return;
+        }
         this.document = globalThis.document;
 
         const container: HTMLElement | null =
@@ -25,8 +29,8 @@ export class DebugVisualizer {
         }
     }
 
-    getPrint(level) {
-        return (...args) => {
+    getPrint(level: LevelString) {
+        return (...args: unknown[]) => {
             if (!this.element) {
                 return;
             }
@@ -42,7 +46,11 @@ export class DebugVisualizer {
                     string += ' ';
                 }
 
-                if (arg.startsWith && arg.startsWith('%c')) {
+                if (
+                    typeof arg === 'string' &&
+                    arg.startsWith &&
+                    arg.startsWith('%c')
+                ) {
                     arg = arg.substring(2);
                 }
 
@@ -50,7 +58,7 @@ export class DebugVisualizer {
                     return;
                 }
 
-                if (arg.substring) {
+                if (typeof arg === 'string' && arg.substring) {
                     string += arg;
                 } else {
                     string += JSON.stringify(arg);

@@ -15,7 +15,7 @@ export interface DebugHelper {
     timeout(ms: number): Promise<void>;
     devnull(...args: unknown[]): unknown[];
     spawn(
-        id?: string | Object | null,
+        id?: string | object | null,
         namespace?: NamespaceParameter,
         startsEnabled?: boolean,
         ...tags: string[]
@@ -24,7 +24,7 @@ export interface DebugHelper {
     getPrefix(): string[];
 }
 
-export type Constructor = new (...args: any[]) => any;
+export type Constructor<T = unknown> = new (...args: unknown[]) => T;
 export type ClassDecorator<T extends Constructor> = (
     constructor: T,
     context?: ClassDecoratorContext
@@ -32,10 +32,10 @@ export type ClassDecorator<T extends Constructor> = (
 
 export interface GlobalDebug extends DebugHelper {
     events: Emitter<Events>;
-    decorate<T extends Constructor>(
+    decorate<T = unknown>(
         prefix: NamespaceParameter,
         ...tags: string[]
-    ): ClassDecorator<T>;
+    ): ClassDecorator<Constructor<T>>;
     toggleVisualization(toggle: boolean): this;
     configure(config: Record<string, boolean>): this;
 }
@@ -47,7 +47,7 @@ export interface DecoratedWithDebug {
 export interface LogEvent {
     type: 'log' | 'warn' | 'error';
     instance: DebugHelper;
-    message: any[];
+    message: unknown[];
 }
 
 export interface RegistrationEvent {
@@ -61,4 +61,4 @@ export interface Events extends Record<string | symbol, unknown> {
     register: RegistrationEvent;
 }
 
-export type NamespaceParameter = string | Object | true | null;
+export type NamespaceParameter = string | object | true | null;

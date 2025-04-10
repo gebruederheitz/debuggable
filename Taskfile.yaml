@@ -1,0 +1,47 @@
+version: 3
+tasks:
+  dev:
+    desc: "Watch sources and host demo content on http://localhost:8080."
+    deps: [install]
+    cmd: asdf exec npm run watch
+
+  build:
+    desc: "Create production-level builds."
+    deps: [install]
+    cmd: asdf exec npm run build
+
+  lint:
+    desc: "Run code style checks, linting and type analysis."
+    deps: [install]
+    cmds:
+      - asdf exec npm run prettier
+      - asdf exec npm run check
+      - asdf exec npm run lint
+
+  test:
+    desc: "Run the test suite."
+    deps: [lint]
+    cmd: asdf exec npm run test
+
+  test:dev:
+    desc: "Run the test suite in isolation (no pre-linting)."
+    deps: [install]
+    cmd: asdf exec npm run test
+
+  release:
+    desc: "Create a tagged release and publish the package."
+    deps: [install]
+    cmd: asdf exec npm run release
+
+  install:
+    desc: "Install nodeJS dependencies."
+    aliases:
+      - install-dependencies
+    method: checksum
+    sources:
+      - package.json
+      - package-lock.json
+    generates:
+      - node_modules/**/*.js
+      - package-lock.json
+    cmd: asdf exec npm i

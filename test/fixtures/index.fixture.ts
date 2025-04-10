@@ -2,7 +2,7 @@ import { debug } from '../../src';
 import { DecoratedWithDebug } from '../../src';
 
 export interface DecoratedDummyClass extends DecoratedWithDebug {}
-@debug.decorate('decorated', 'tag')
+@debug.decorate<DecoratedDummyClass>('decorated', 'tag')
 export class DecoratedDummyClass {
     poke() {
         this.debug.log('Ouch');

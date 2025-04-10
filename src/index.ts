@@ -29,7 +29,7 @@ class BasicDebugHelper implements DebugHelper {
     }
 
     public spawn(
-        id: string | Object | null = null,
+        id: string | object | null = null,
         namespace: NamespaceParameter = null,
         startsEnabled: boolean = true,
         ...tags: string[]
@@ -44,7 +44,7 @@ class BasicDebugHelper implements DebugHelper {
             childId = id;
         }
 
-        let childNamespace = [...this._namespace];
+        const childNamespace = [...this._namespace];
 
         if (namespace !== null) {
             let parsedNamespace: string;
@@ -125,7 +125,7 @@ class BasicDebugHelper implements DebugHelper {
     }
 
     public async timeout(ms: number): Promise<void> {
-        return new Promise((res) => {
+        return new Promise<void>((res) => {
             setTimeout(() => res(), ms);
         });
     }
@@ -227,9 +227,12 @@ class GlobalDebugHelper
             constructor: T,
             context: ClassDecoratorContext = null
         ): T {
-            const base: DebugHelper = constructor.prototype?.debug || debug;
+            const base: DebugHelper =
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                (constructor.prototype?.debug as DebugHelper) || debug;
             const name = context?.name || constructor.name || null;
 
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             constructor.prototype.debug = base
                 .spawn(name, prefix)
                 .addTags(...tags);
@@ -249,7 +252,9 @@ class GlobalDebugHelper
     };
 
     private onMessage = ({ type, message, instance }: LogEvent): void => {
-        if (!this.globallyEnabled) return;
+        if (!this.globallyEnabled) {
+            return;
+        }
 
         if (!this.checkOriginEnabled(instance)) {
             return;
