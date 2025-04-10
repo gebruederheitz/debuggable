@@ -1,8 +1,6 @@
-import { describe, it, beforeEach, afterEach } from 'vitest';
-import { expect } from 'chai';
+import { vi, expect, describe, it, beforeEach, afterEach } from 'vitest';
 import sinon from 'sinon';
 
-import { debug } from '../dist/index.mjs';
 import {
     DecoratedDummyClass,
     DecoratedDummyChild,
@@ -10,20 +8,21 @@ import {
 } from './fixtures/build/node/test/fixtures/index.fixture.js';
 
 describe('The debuggable library', () => {
-    const sandbox = sinon.createSandbox();
     let consoleLog;
+    let debug;
 
-    beforeEach(() => {
-        consoleLog = sandbox.replace(global.console, 'log', sinon.fake());
-        // consoleLog = sandbox.replace(
-        //     global.console,
-        //     'log',
-        //     sinon.fake(console.log)
-        // );
+    beforeEach(async () => {
+        const m = await import('../dist/index.mjs');
+        debug = m.debug;
+
+        consoleLog = vi
+            .spyOn(global.console, 'log')
+            .mockImplementation(vi.fn());
     });
 
     afterEach(function () {
-        sandbox.restore();
+        vi.clearAllMocks();
+        vi.resetModules();
     });
 
     it('should not display console output by default', () => {
@@ -32,7 +31,7 @@ describe('The debuggable library', () => {
         child.log('Hello');
         child.log('Goodbye');
 
-        expect(consoleLog.called).to.be.false;
+        expect(consoleLog).not.toHaveBeenCalled();
     });
 
     it('should display console output when debugging is enabled', () => {
@@ -42,10 +41,11 @@ describe('The debuggable library', () => {
         child.log('Hello');
         child.log('Goodbye');
 
-        expect(consoleLog.calledTwice).to.be.true;
+        expect(consoleLog).toHaveBeenCalledTimes(2);
     });
 
     it('should not display console output when debugging is disabled', () => {
+        debug.enable();
         const child = debug.spawn('child disabled');
 
         child.log('Hello');
@@ -55,7 +55,7 @@ describe('The debuggable library', () => {
         child.log('Hello');
         child.log('Goodbye');
 
-        expect(consoleLog.calledOnce).to.be.true;
+        expect(consoleLog).toHaveBeenCalledTimes(1);
     });
 
     it('allows toggling individual children', () => {
@@ -70,7 +70,7 @@ describe('The debuggable library', () => {
         silentChild.log('Hello');
         silentChild.log('Goodbye');
 
-        expect(consoleLog.calledTwice).to.be.true;
+        expect(consoleLog).toHaveBeenCalledTimes(2);
     });
 
     it('can spawn instances that start disabled', () => {
@@ -83,7 +83,7 @@ describe('The debuggable library', () => {
         silentChild.log('Hello');
         silentChild.log('Goodbye');
 
-        expect(consoleLog.calledTwice).to.be.true;
+        expect(consoleLog).toHaveBeenCalledTimes(2);
     });
 
     it('applies global scope to all children', () => {
@@ -93,7 +93,7 @@ describe('The debuggable library', () => {
 
         child.log('Hello');
 
-        expect(consoleLog.called).to.be.false;
+        expect(consoleLog).not.toHaveBeenCalled();
     });
 
     it('prefixes child output', () => {
@@ -102,7 +102,7 @@ describe('The debuggable library', () => {
 
         child.log('Prefixed');
 
-        expect(consoleLog.firstArg).to.equal('[child]');
+        expect(consoleLog.mock.lastCall[0]).toBe('[child]');
     });
 
     it('can use a class name as an id and prefix when passed an object', () => {
@@ -112,7 +112,7 @@ describe('The debuggable library', () => {
 
         child.log('Prefixed');
 
-        expect(consoleLog.firstArg).to.equal('[FixtureDummyClass]');
+        expect(consoleLog.mock.lastCall[0]).toBe('[FixtureDummyClass]');
     });
 
     it('can skip prefixing', () => {
@@ -121,7 +121,7 @@ describe('The debuggable library', () => {
 
         child.log('Not Prefixed');
 
-        expect(consoleLog.firstArg).to.equal('Not Prefixed');
+        expect(consoleLog.mock.lastCall[0]).toBe('Not Prefixed');
     });
 
     it('can have a custom prefix', () => {
@@ -130,7 +130,7 @@ describe('The debuggable library', () => {
 
         child.log('Prefix that is not the ID');
 
-        expect(consoleLog.firstArg).to.equal('[not-the-id]');
+        expect(consoleLog.mock.lastCall[0]).toBe('[not-the-id]');
     });
 
     it('allows recursion', () => {
@@ -145,7 +145,7 @@ describe('The debuggable library', () => {
         grandchild.log('hi granddad');
         greatGrandchild.log('hi great-granddaddy');
 
-        expect(consoleLog.callCount).to.equal(3);
+        expect(consoleLog).toHaveBeenCalledTimes(3);
     });
 
     it('passes status down the tree when recurring', () => {
@@ -176,7 +176,7 @@ describe('The debuggable library', () => {
         grandchild.log('hi again granddad');
         greatGrandchild.log('hi again great-granddaddy');
 
-        expect(consoleLog.callCount).to.equal(4);
+        expect(consoleLog).toHaveBeenCalledTimes(4);
     });
 
     it('stacks prefixes', () => {
@@ -186,8 +186,8 @@ describe('The debuggable library', () => {
 
         grandchild.log('Stacked prefixes');
 
-        expect(consoleLog.firstArg).to.equal('[child]');
-        expect(consoleLog.args[0]).to.include.ordered.members([
+        expect(consoleLog.mock.lastCall[0]).toBe('[child]');
+        expect(consoleLog.mock.lastCall).to.include.ordered.members([
             '[child]',
             '[grandchild]',
         ]);
@@ -215,7 +215,7 @@ describe('The debuggable library', () => {
         first.enable();
         firstChild.log('hello');
 
-        expect(consoleLog.callCount).to.equal(2);
+        expect(consoleLog).toHaveBeenCalledTimes(2);
     });
 
     it('allows overriding the base configuration', () => {
@@ -226,13 +226,13 @@ describe('The debuggable library', () => {
 
         // on
         child.log('hello');
-        expect(consoleLog.callCount).to.equal(1);
+        expect(consoleLog).toHaveBeenCalledTimes(1);
 
         child.disable();
         // off
         child.log('hello');
 
-        expect(consoleLog.callCount).to.equal(1);
+        expect(consoleLog).toHaveBeenCalledTimes(1);
     });
 
     it('can use tags to enable or disable instances', () => {
@@ -265,7 +265,7 @@ describe('The debuggable library', () => {
         firstChild.log('silence');
         secondChild.log('noise');
 
-        expect(consoleLog.callCount).to.equal(2);
+        expect(consoleLog).toHaveBeenCalledTimes(2);
     });
 
     it('exposes an event interface', () => {
@@ -289,7 +289,7 @@ describe('The debuggable library', () => {
         debug.events.emit('toggle_' + child.id, { enabled: false });
         child.log('silent');
 
-        expect(consoleLog.callCount).to.equal(1);
+        expect(consoleLog).toHaveBeenCalledTimes(1);
     });
 
     it('can decorate classes with a spawned "debug" property', () => {
@@ -300,11 +300,11 @@ describe('The debuggable library', () => {
         expect(DecoratedDummyClass.prototype).to.haveOwnProperty('debug');
 
         dummyClassInstance.poke();
-        expect(consoleLog.firstArg).to.equal('[decorated]');
+        expect(consoleLog.mock.lastCall[0]).toBe('[decorated]');
 
         fixtureGlobalDebugInstance.configure({ tag: false });
         dummyClassInstance.poke();
-        expect(consoleLog.callCount).to.equal(1);
+        expect(consoleLog).toHaveBeenCalledTimes(1);
     });
 
     it('can decorate child classes', () => {
@@ -319,10 +319,100 @@ describe('The debuggable library', () => {
         fixtureGlobalDebugInstance.configure({ tag: true });
 
         dummyClassInstance.poke();
-        expect(consoleLog.args.flat())
+        expect(consoleLog.mock.lastCall)
             .to.include('[decorated]')
             .and.to.include('[grandchild]');
 
-        expect(consoleLog.callCount).to.equal(1);
+        expect(consoleLog).toHaveBeenCalledTimes(1);
+    });
+
+    it("can use the console's grouping feature when it is available and enabled", () => {
+        const group = vi
+            .spyOn(global.console, 'group')
+            .mockImplementation(vi.fn());
+        const groupEnd = vi
+            .spyOn(global.console, 'groupEnd')
+            .mockImplementation(vi.fn());
+
+        debug
+            .enable()
+            .configure(null, {
+                grouped: true,
+            })
+            .spawn(null, 'test')
+            .log('test');
+
+        expect(group).toHaveBeenCalledTimes(1);
+        expect(groupEnd).toHaveBeenCalledTimes(1);
+        expect(consoleLog).toHaveBeenCalledTimes(1);
+    });
+
+    it('stacks prefixes in grouped output', () => {
+        const group = vi
+            .spyOn(global.console, 'group')
+            .mockImplementation(vi.fn());
+
+        debug
+            .enable()
+            .configure(null, { grouped: true })
+            .spawn(null, 'parent')
+            .spawn(null, 'child')
+            .log('test');
+
+        expect(consoleLog).toHaveBeenCalledTimes(1);
+        expect(group).toHaveBeenCalledTimes(1);
+        expect(group.mock.lastCall)
+            .to.include('[parent]')
+            .and.to.include('[child]');
+    });
+
+    it('allows to use dotted prefix stacking instead of square brackets', () => {
+        debug
+            .enable()
+            .configure(null, {
+                dotted: true,
+            })
+            .spawn('child', true)
+            .spawn('grandchild', true)
+            .log('Dotted and bracketed');
+
+        const options = debug.getOptions();
+        expect(options).to.haveOwnProperty('dotted');
+        expect(debug.options.dotted).to.be.true;
+        expect(debug.options.grouped).to.be.false;
+
+        expect(consoleLog.mock.lastCall[0]).toBe('[child.grandchild]');
+    });
+
+    it('allows dotted prefix stacking in grouped output', () => {
+        const group = vi.spyOn(global.console, 'group');
+
+        debug.enable().configure(null, {
+            dotted: true,
+            grouped: true,
+        });
+        debug
+            .spawn('child', true)
+            .spawn('grandchild', true)
+            .log('Dotted group');
+
+        expect(group.mock.lastCall[0]).toBe('child.grandchild');
+    });
+
+    it('can use warn and error outputs', () => {
+        const warn = vi
+            .spyOn(global.console, 'warn')
+            .mockImplementation(vi.fn());
+        const error = vi
+            .spyOn(global.console, 'error')
+            .mockImplementation(vi.fn());
+        debug.enable();
+        const logger = debug.spawn();
+
+        logger.warn('test');
+        logger.error('test');
+
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(error).toHaveBeenCalledTimes(1);
     });
 });

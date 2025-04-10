@@ -5,6 +5,7 @@ import type {
     DebugHelper,
     Events,
     GlobalDebug,
+    GlobalOptions,
     LogEvent,
     NamespaceParameter,
     RegistrationEvent,
@@ -17,6 +18,11 @@ import SymbolTree from 'symbol-tree';
 import { DebugVisualizer } from './debug-visualizer';
 
 const eventProxy: Emitter<Events> = mitt();
+
+const DEFAULT_GLOBAL_OPTIONS: GlobalOptions = {
+    grouped: false,
+    dotted: false,
+};
 
 class BasicDebugHelper implements DebugHelper {
     constructor(
@@ -156,6 +162,7 @@ class GlobalDebugHelper
 {
     protected _visualize: boolean = false;
     protected _visualizer: DebugVisualizer = new DebugVisualizer();
+    protected options: GlobalOptions = DEFAULT_GLOBAL_OPTIONS;
     private globallyEnabled: boolean = false;
     private tree: SymbolTree = new SymbolTree();
 
@@ -163,6 +170,10 @@ class GlobalDebugHelper
         super('Global', []);
         eventProxy.on('message', this.onMessage);
         eventProxy.on('register', this.onRegister);
+    }
+
+    public getOptions(): GlobalOptions {
+        return this.options;
     }
 
     public get events() {
@@ -208,13 +219,25 @@ class GlobalDebugHelper
         return this;
     }
 
-    public configure(config: Record<string, boolean>): this {
-        Object.keys(config).forEach((instanceIdOrTag) => {
-            const shouldBeEnabled = config[instanceIdOrTag];
-            eventProxy.emit(`toggle_${instanceIdOrTag}`, {
-                enabled: shouldBeEnabled,
+    public configure(
+        config: Record<string, boolean> = null,
+        options: GlobalOptions = null
+    ): this {
+        if (config) {
+            Object.keys(config).forEach((instanceIdOrTag) => {
+                const shouldBeEnabled = config[instanceIdOrTag];
+                eventProxy.emit(`toggle_${instanceIdOrTag}`, {
+                    enabled: shouldBeEnabled,
+                });
             });
-        });
+        }
+
+        if (options) {
+            this.options = {
+                ...this.options,
+                ...options,
+            };
+        }
 
         return this;
     }
@@ -244,7 +267,33 @@ class GlobalDebugHelper
     protected override listen(): void {}
 
     protected prefix(...strings: string[]): string[] {
-        return strings.map((s) => `[${s.trim()}]`);
+        const prefix = this.preparePrefix(strings);
+        if (this.doGrouping()) {
+            console.group(...prefix);
+
+            return [];
+        }
+        return prefix;
+    }
+
+    private doGrouping(): boolean {
+        return this.options.grouped && typeof console.group === 'function';
+    }
+
+    private preparePrefix(strings: string[]): string[] {
+        if (this.options.dotted) {
+            const prefix = strings.map((s) => s.trim()).join('.');
+
+            return this.doGrouping() ? [prefix] : [`[${prefix}]`];
+        } else {
+            return strings.map((s) => `[${s.trim()}]`);
+        }
+    }
+
+    protected suffix(): void {
+        if (this.options.grouped && typeof console.groupEnd === 'function') {
+            console.groupEnd();
+        }
     }
 
     private onRegister = ({ instance, parent }: RegistrationEvent): void => {
@@ -261,6 +310,7 @@ class GlobalDebugHelper
         }
 
         this[type](...this.prefix(...instance.getPrefix()), ...message);
+        this.suffix();
     };
 
     private checkOriginEnabled(instance: DebugHelper): boolean {

@@ -62,3 +62,8 @@ export interface Events extends Record<string | symbol, unknown> {
 }
 
 export type NamespaceParameter = string | object | true | null;
+
+export interface GlobalOptions {
+    grouped: boolean;
+    dotted: boolean;
+}
