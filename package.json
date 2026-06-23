@@ -1,81 +1,79 @@
 {
-  "name": "@gebruederheitz/debuggable",
-  "version": "3.1.2",
-  "description": "Flexible debug output for browser applications.",
-  "source": "src/index.ts",
-  "module": "dist/index.mjs",
-  "main": "dist/index.js",
-  "browserslist": ">0.2% and not dead, ie 11",
-  "types": "dist/types.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/types.d.ts"
+    "name": "@gebruederheitz/debuggable",
+    "version": "3.1.2",
+    "description": "Flexible debug output for browser applications.",
+    "source": "src/index.ts",
+    "module": "dist/index.mjs",
+    "main": "dist/index.js",
+    "browserslist": ">0.2% and not dead, ie 11",
+    "types": "dist/types.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js",
+            "types": "./dist/types.d.ts"
+        }
+    },
+    "private": false,
+    "scripts": {
+        "build": "parcel build",
+        "lint": "eslint src/",
+        "check": "tsc --noEmit",
+        "prettier": "prettier -c src/",
+        "release": "release-it --only-version",
+        "pretest": "npm run build && rm -rf test/fixtures/build",
+        "test": "npm run test:build-fixtures && vitest run test/",
+        "test:dev": "npm run test:build-fixtures && vitest test/",
+        "test:build-fixtures": "npm run test:build-fixtures-node && npm run test:build-fixtures-browser",
+        "test:build-fixtures-node": "tsc -p test/fixtures/tsconfig.json --outDir test/fixtures/build/node/",
+        "test:build-fixtures-browser": "rollup --config test/fixtures/rollup.config.mjs",
+        "watch": "parcel watch"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/gebruederheitz/debuggable.git"
+    },
+    "keywords": [
+        "debug",
+        "log",
+        "console"
+    ],
+    "author": "Andreas Maros <andreas.maros@gebruederheitz.de>",
+    "license": "GPL-3.0-only",
+    "bugs": {
+        "url": "https://github.com/gebruederheitz/debuggable/issues"
+    },
+    "homepage": "https://github.com/gebruederheitz/debuggable#readme",
+    "publishConfig": {
+        "access": "public"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.39.4",
+        "@parcel/packager-ts": "^2.16.4",
+        "@parcel/transformer-typescript-types": "^2.16.4",
+        "@rollup/plugin-commonjs": "^29.0.3",
+        "@rollup/plugin-node-resolve": "^16.0.3",
+        "@rollup/plugin-typescript": "^12.3.0",
+        "@types/node": "~24",
+        "@types/symbol-tree": "^3.2.5",
+        "chai": "^6.2.2",
+        "eslint": "^10.5.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-prettier": "^5.5.6",
+        "happy-dom": "^20.10.6",
+        "parcel": "^2.16.4",
+        "prettier": "^3.8.4",
+        "release-it": "^20.2.0",
+        "rollup": "^4.62.2",
+        "sinon": "^22.0.0",
+        "typescript": "^5.9.3",
+        "typescript-eslint": "^8.62.0",
+        "vitest": "^4.1.9",
+        "when-dom-ready": "^1.2.12"
+    },
+    "dependencies": {
+        "@swc/helpers": "^0.5.23",
+        "mitt": "^3.0.1",
+        "symbol-tree": "^3.2.4"
     }
-  },
-  "private": false,
-  "scripts": {
-    "build": "parcel build",
-    "lint": "eslint src/",
-    "check": "tsc --noEmit",
-    "prettier": "prettier -c src/",
-    "release": "release-it --only-version",
-    "pretest": "npm run build && rm -rf test/fixtures/build",
-    "test": "npm run test:build-fixtures && vitest run test/",
-    "test:dev": "npm run test:build-fixtures && vitest test/",
-    "test:build-fixtures": "npm run test:build-fixtures-node && npm run test:build-fixtures-browser",
-    "test:build-fixtures-node": "tsc -p test/fixtures/tsconfig.json --outDir test/fixtures/build/node/",
-    "test:build-fixtures-browser": "rollup --config test/fixtures/rollup.config.mjs",
-    "watch": "parcel watch"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gebruederheitz/debuggable.git"
-  },
-  "keywords": [
-    "debug",
-    "log",
-    "console"
-  ],
-  "author": "Andreas Maros <andreas.maros@gebruederheitz.de>",
-  "license": "GPL-3.0-only",
-  "bugs": {
-    "url": "https://github.com/gebruederheitz/debuggable/issues"
-  },
-  "homepage": "https://github.com/gebruederheitz/debuggable#readme",
-  "publishConfig": {
-    "access": "public"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.24.0",
-    "@parcel/packager-ts": "^2.9.2",
-    "@parcel/transformer-typescript-types": "^2.9.2",
-    "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-typescript": "^11.1.6",
-    "@types/node": "^20.12.4",
-    "@types/symbol-tree": "^3.2.5",
-    "@types/uuid": "^9.0.8",
-    "chai": "^5.1.0",
-    "eslint": "^9.24.0",
-    "eslint-config-prettier": "^10.1.2",
-    "eslint-plugin-prettier": "^5.2.6",
-    "happy-dom": "^14.7.1",
-    "parcel": "^2.9.2",
-    "prettier": "^3.5.3",
-    "release-it": "^15.10.3",
-    "rollup": "^4.14.3",
-    "sinon": "^17.0.1",
-    "typescript": "^5.1.3",
-    "typescript-eslint": "^8.29.1",
-    "vitest": "^3.1.1",
-    "when-dom-ready": "^1.2.12"
-  },
-  "dependencies": {
-    "@swc/helpers": "^0.5.1",
-    "mitt": "^3.0.1",
-    "symbol-tree": "^3.2.4",
-    "uuid": "^9.0.1"
-  }
 }

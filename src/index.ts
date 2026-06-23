@@ -13,7 +13,6 @@ import type {
 } from './interfaces';
 
 import mitt from 'mitt';
-import { v4 as uuid } from 'uuid';
 import SymbolTree from 'symbol-tree';
 import { DebugVisualizer } from './debug-visualizer';
 
@@ -43,7 +42,7 @@ class BasicDebugHelper implements DebugHelper {
         let childId: string;
 
         if (id === null) {
-            childId = uuid();
+            childId = globalThis.crypto.randomUUID();
         } else if (typeof id !== 'string') {
             childId = id.constructor?.name;
         } else {

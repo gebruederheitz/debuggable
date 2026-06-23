@@ -55,6 +55,6 @@ tasks:
       - package.json
       - package-lock.json
     generates:
-      - node_modules/**/*.js
+      - node_modules/**/*
       - package-lock.json
     cmd: asdf exec npm i
