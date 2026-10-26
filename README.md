@@ -317,10 +317,11 @@ class MyClass {
 
 ### Dependencies
 
-- nodeJS LTS (18.x)
+- Node.js in the version from `.tool-versions`; CircleCI follows the current LTS
+  (`node_version` in `.circleci/config.yml`)
 - nice to have:
     - GNU make or drop-in alternative
-    - NVM or [asdf](https://asdf-vm.com/guide/getting-started.html)
+    - [asdf](https://asdf-vm.com/guide/getting-started.html)
 
 
 ### Quickstart
